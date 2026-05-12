@@ -6,8 +6,9 @@ using TMPro;
 
 public class TaxiManager : MonoBehaviour
 {
-    public TMP_Text pointHUD;
+    public TMP_Text infoHUD;
     public TMP_Text moneyHUD;
+    public TMP_Text hintHUD;
 
     string status;
     float money;
@@ -18,24 +19,55 @@ public class TaxiManager : MonoBehaviour
     GameObject pickpoint;
     GameObject dropOff;
 
+    private CarInputActions carControls;
+
     void Awake()
     {
+        carControls = new CarInputActions();
+
         points = new List<GameObject>(
             FindObjectsByType<GameObject>(FindObjectsSortMode.None)
             .Where(o => o.CompareTag("Point")));
+    }
+
+    void OnEnable()
+    {
+        carControls.Enable();
+
+        if(status == "wfo")
+        {
+            hintHUD.SetText("Press ENTER to place new order");
+        }
+    }
+
+    void OnDisable()
+    {
+        carControls.Disable();
     }
 
     void Start() 
     {
         status = "wfo";
 
-        pointHUD.SetText("Waiting for order");
+        infoHUD.SetText("Waiting for order");
+        hintHUD.SetText("Press ENTER to place new order");
         
         UpdateMoney(0f);
     }
 
+    void FixedUpdate()
+    {
+        bool isConfirmed = carControls.HUD.Confirm.WasPressedThisFrame();
+        if(isConfirmed)
+        {
+            StartRandomOrder();
+        }
+    }
+
     public void StartRandomOrder()
     {
+        hintHUD.SetText("");
+        
         if(status == "wfo")
         {
             ppIndex = Random.Range(0, points.Count);
@@ -50,7 +82,7 @@ public class TaxiManager : MonoBehaviour
             dropOff = points[doIndex];
 
             pickpoint.GetComponent<MeshRenderer>().enabled = true;
-            pointHUD.SetText("From: " + pickpoint.name + "\nTo: " + dropOff.name + "\nHeading to pickpoint");
+            infoHUD.SetText("From: " + pickpoint.name + "\nTo: " + dropOff.name + "\nHeading to pickpoint");
 
             status = "htp";
         }
@@ -63,10 +95,9 @@ public class TaxiManager : MonoBehaviour
             if(trigger == pickpoint)
             {
                 trigger.GetComponent<MeshRenderer>().enabled = false;
+    dropOff.GetComponent<MeshRenderer>().enabled = true;
 
-                dropOff.GetComponent<MeshRenderer>().enabled = true;
-
-                pointHUD.SetText("From: " + pickpoint.name + "\nTo: " + dropOff.name + "\nHeading to drop-off");
+                infoHUD.SetText("From: " + pickpoint.name + "\nTo: " + dropOff.name + "\nHeading to drop-off");
 
                 status = "htd";
             }
@@ -77,7 +108,9 @@ public class TaxiManager : MonoBehaviour
             {
                 trigger.GetComponent<MeshRenderer>().enabled = false;
 
-                pointHUD.SetText("Waiting for order");
+                infoHUD.SetText("Waiting for order");
+
+                hintHUD.SetText("Press ENTER to place new order");
 
                 UpdateMoney(100f);
 

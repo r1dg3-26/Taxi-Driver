@@ -179,6 +179,34 @@ public partial class @CarInputActions: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""HUD"",
+            ""id"": ""7bd30387-cf19-493c-a2f3-32daaa070036"",
+            ""actions"": [
+                {
+                    ""name"": ""Confirm"",
+                    ""type"": ""Button"",
+                    ""id"": ""e267e651-b86a-4a3e-8886-cb2be49531ba"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""66742684-310a-4f85-b298-864ebef199e5"",
+                    ""path"": ""<Keyboard>/enter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Confirm"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": [
@@ -248,11 +276,15 @@ public partial class @CarInputActions: IInputActionCollection2, IDisposable
         m_Car = asset.FindActionMap("Car", throwIfNotFound: true);
         m_Car_Movement = m_Car.FindAction("Movement", throwIfNotFound: true);
         m_Car_Handbrake = m_Car.FindAction("Handbrake", throwIfNotFound: true);
+        // HUD
+        m_HUD = asset.FindActionMap("HUD", throwIfNotFound: true);
+        m_HUD_Confirm = m_HUD.FindAction("Confirm", throwIfNotFound: true);
     }
 
     ~@CarInputActions()
     {
         UnityEngine.Debug.Assert(!m_Car.enabled, "This will cause a leak and performance issues, CarInputActions.Car.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_HUD.enabled, "This will cause a leak and performance issues, CarInputActions.HUD.Disable() has not been called.");
     }
 
     /// <summary>
@@ -431,6 +463,102 @@ public partial class @CarInputActions: IInputActionCollection2, IDisposable
     /// Provides a new <see cref="CarActions" /> instance referencing this action map.
     /// </summary>
     public CarActions @Car => new CarActions(this);
+
+    // HUD
+    private readonly InputActionMap m_HUD;
+    private List<IHUDActions> m_HUDActionsCallbackInterfaces = new List<IHUDActions>();
+    private readonly InputAction m_HUD_Confirm;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "HUD".
+    /// </summary>
+    public struct HUDActions
+    {
+        private @CarInputActions m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public HUDActions(@CarInputActions wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "HUD/Confirm".
+        /// </summary>
+        public InputAction @Confirm => m_Wrapper.m_HUD_Confirm;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_HUD; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="HUDActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(HUDActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="HUDActions" />
+        public void AddCallbacks(IHUDActions instance)
+        {
+            if (instance == null || m_Wrapper.m_HUDActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_HUDActionsCallbackInterfaces.Add(instance);
+            @Confirm.started += instance.OnConfirm;
+            @Confirm.performed += instance.OnConfirm;
+            @Confirm.canceled += instance.OnConfirm;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="HUDActions" />
+        private void UnregisterCallbacks(IHUDActions instance)
+        {
+            @Confirm.started -= instance.OnConfirm;
+            @Confirm.performed -= instance.OnConfirm;
+            @Confirm.canceled -= instance.OnConfirm;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="HUDActions.UnregisterCallbacks(IHUDActions)" />.
+        /// </summary>
+        /// <seealso cref="HUDActions.UnregisterCallbacks(IHUDActions)" />
+        public void RemoveCallbacks(IHUDActions instance)
+        {
+            if (m_Wrapper.m_HUDActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="HUDActions.AddCallbacks(IHUDActions)" />
+        /// <seealso cref="HUDActions.RemoveCallbacks(IHUDActions)" />
+        /// <seealso cref="HUDActions.UnregisterCallbacks(IHUDActions)" />
+        public void SetCallbacks(IHUDActions instance)
+        {
+            foreach (var item in m_Wrapper.m_HUDActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_HUDActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="HUDActions" /> instance referencing this action map.
+    /// </summary>
+    public HUDActions @HUD => new HUDActions(this);
     private int m_KeyboardMouseSchemeIndex = -1;
     /// <summary>
     /// Provides access to the input control scheme.
@@ -517,5 +645,20 @@ public partial class @CarInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnHandbrake(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "HUD" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="HUDActions.AddCallbacks(IHUDActions)" />
+    /// <seealso cref="HUDActions.RemoveCallbacks(IHUDActions)" />
+    public interface IHUDActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "Confirm" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnConfirm(InputAction.CallbackContext context);
     }
 }

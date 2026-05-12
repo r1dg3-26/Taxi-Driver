@@ -1,13 +1,13 @@
 using UnityEngine;
 
-public class PickpointTrigger : MonoBehaviour
+public class PointTrigger : MonoBehaviour
 {
     public TaxiManager manager;
 
     void OnTriggerEnter(Collider other) 
     {
         if(other.attachedRigidbody != null &&
-            other.attachedRigidbody.CompareTag("Player"))
+            other.attachedRigidbody.CompareTag("Car"))
         {
             manager.Trigger(gameObject);
         }

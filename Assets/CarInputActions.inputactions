@@ -93,6 +93,34 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "HUD",
+            "id": "7bd30387-cf19-493c-a2f3-32daaa070036",
+            "actions": [
+                {
+                    "name": "Confirm",
+                    "type": "Button",
+                    "id": "e267e651-b86a-4a3e-8886-cb2be49531ba",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "66742684-310a-4f85-b298-864ebef199e5",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Confirm",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": [
