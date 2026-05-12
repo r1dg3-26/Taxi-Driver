@@ -9,7 +9,7 @@ public class PickpointTrigger : MonoBehaviour
         if(other.attachedRigidbody != null &&
             other.attachedRigidbody.CompareTag("Player"))
         {
-            manager.Trigger(gameObject.name);
+            manager.Trigger(gameObject);
         }
     }
 }
